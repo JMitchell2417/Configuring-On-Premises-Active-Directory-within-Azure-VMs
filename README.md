@@ -3,115 +3,191 @@
 </p>
 
 <h1>On-premises Active Directory Deployed in the Cloud (Azure)</h1>
+
 This tutorial outlines the implementation of on-premises Active Directory within Azure Virtual Machines.<br />
 
 <h2>Environments and Technologies Used</h2>
 
 - Microsoft Azure (Virtual Machines/Compute)
-- Remote Desktop
+- Remote Desktop (RDP)
 - Active Directory Domain Services
 - PowerShell
+- Azure Virtual Network
+- DNS
 
 <h2>Operating Systems Used </h2>
 
-- Windows Server 2022
-- Windows 10 (21H2)
+- Windows Server 2025 Datacenter
+- Windows 11 Pro
 
 <h2>Deployment and Configuration Steps</h2>
 
-This lab provisions two virtual machines within the same Azure virtual network to simulate a basic on-premises Active Directory environment.
+- This lab provisions two virtual machines within the same Azure virtual network to simulate a basic on-premises Active Directory environment.
 
-One virtual machine is configured as a Domain Controller, while the second serves as a client workstation. The Domain Controller is assigned a static private IP address to ensure consistent availability for Active Directory and DNS services.</p>
-
-The client machine is then joined to the domain and configured to use the Domain Controller as its primary DNS server, enabling proper name resolution and domain authentication.
+- Create a virtual network and subnet for both Virtual Machines to join (name: Active-Directory-Vnet)
 
 <br>
-<img src="./images/step-1.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
+<img src="./images/fig1.2-Virtual-Network.jpg" height="60%" width="60%" alt="Virtual Network"/>
 <br>
 
-The Domain Controller (DC-1) is assigned a static private IP address to ensure stable network communication with domain-joined clients.
+<h2>Step 1: Create Virtual Machines</h2>
 
-To verify connectivity, the client machine (Client-1) attempts to ping DC-1. By default, the request fails due to ICMP traffic being blocked by the Windows firewall on the Domain Controller.</p>
+One virtual machine is configured as a Domain Controller, while the second serves as a client workstation.
 
-Inbound ICMPv4 rules are then enabled on DC-1, allowing the client machine to successfully reach the Domain Controller and confirm network connectivity.
+- <b>Domain Controller (DC)</b>
+  - OS: Windows (Windows Server 2025 Datacenter Azure Edition)
+  - VM Size: Minimum 2 vCPUs
+  - Name: dc-01
+  - Virtual Network: Previously created (Active-Directory-VNet)
+  - Private IP: Static (important)
+
+- <b>Client Machine</b>
+  - OS: Windows (Windows 11 Pro)
+  - VM Size: Minimum 2 vCPUs
+  - Name: client-01
+  - Virtual Network: Previously created (Active-Directory-VNet)
+
+<br>
+<img src="./images/1.1-VMs.jpg" height="80%" width="80%" alt="Virtual Network"/>
+<br>
+
+<h2>Step 2: Assign Domain Controller a static private IP address</h2>
+
+- The Domain Controller (DC-1) is assigned a static private IP address to ensure stable network communication with domain-joined clients.
+
+<br>
+<img src="./images/1.3-DC1-staticIP.jpg" height="80%" width="80%" alt="Disk Sanitization Steps"/>
+<br>
+
+<h2>Step 3: Set client-1’s DNS settings to DC-1’s Private IP address</h2>
+
+- client-1 is configured to use dc-1’s private IP address as its DNS server because Active Directory depends on DNS for domain discovery, authentication, and service location.
+
+- This ensures the client can reliably locate the Domain Controller and interact with domain services within the virtual network.
+
+<br>
+<img src="./images/1.4-dc1-privateIP.jpg" height="80%" width="80%" alt="dc-1 private IP"/>
+<br>
+
+<br>
+<img src="./images/1.4-client1-dnsSettings.jpg" height="80%" width="80%" alt="client-1 DNS settings"/>
+<br>
+
+<h2>Step 4: Verify Connectivity</h2>
+
+- To verify connectivity, the client machine (client-1) attempts to ping DC-1.
+
+- (If request fails: check that both VMs are in the same network or if its due to ICMP traffic being blocked by the Windows firewall on the Domain Controller.)
+
+<br>
+<img src="./images/1.5-clinet1ping.jpg" height="80%" width="80%" alt="ping"/>
+<br>
+
+- Still in client-1, run ipconfig /all
+
+  -The output for the DNS settings should show dC-1’s private IP Address
+
+<br>
+<img src="./images/a.5-client1-ipconfig.jpg" height="80%" width="80%" alt=""/>
+<br>
 
 <br>
 <img src="./images/step-3.png" height="60%" width="60%" alt="Disk Sanitization Steps"/>
 <br>
 
-DC-1 is used to install the Active Directory Domain Services role and associated management tools, including Active Directory Users and Computers.
+<h2>Step 5: Promote Server to Domain Controller</h2>
 
-The virtual machine is then promoted to a Domain Controller and configured with a new forest using the domain name mydomain.com. After promotion, the system is restarted to apply the configuration changes.
+- <b>Install Active Directory Domain Services on dc-1</b>
+  - Open <b>Server Manager</b>
+  - Select <b>Add Roles and Features</b>
+  - Install <b>Active Directory Domain Services</b>
 
-Once the restart is complete, DC-1 is accessed using the domain account mydomain.com\labuser. Successful configuration is confirmed by launching Active Directory Users and Computers, indicating that the domain services are operational.
+<br>
+<img src="./images/2.0-dc-1.jpg" height="60%" width="60%" alt="Disk Sanitization Steps"/>
+<br>
+
+- <b>Promote dc-1 to a Domain Controller</b>
+  - Select <b>Promote this Server to a Domain Controller</b>
+  - Choose <b>Add New Forest</b>
+  - Set Domain name to <b>mydomain.com</b>
+  - Finish Installation
+
+<br>
+<img src="./images/2.1-dc1-promotion.jpg" height="60%" width="60%" alt="Disk Sanitization Steps"/>
+<br>
+
+<br>
+<img src="./images/2.1-dc1-forest.jpg" height="60%" width="60%" alt="Disk Sanitization Steps"/>
+<br>
+
+- After promotion, the system is restarted to apply the configuration changes.
+
+- Once the restart is complete, dC-1 is accessed using the domain account mydomain.com\labuser.
 
 <br>
 <img src="./images/step-4.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
 <br>
 
-Organizational Units (OUs) are created to establish basic directory structure and administrative separation within the domain.
+<h2>Step 6: Create Organizational Units and Structure</h2>
 
-Two OUs are defined at the domain level:
+1. Successful configuration is confirmed by launching <b>Active Directory Users and Computers</b>, indicating that the domain services are operational.
+
+2. Organizational Units (OUs) are created to establish basic directory structure and administrative separation within the domain.
+
+3. <b>Two OUs are defined at the domain level</b>
 
 - \_EMPLOYEES
-
 - \_ADMINS
 
-Within these OUs, a new user account is created to represent an administrative user. The account Jane Doe is provisioned with the username Jane_admin and placed appropriately within the directory structure.
-
-To grant elevated privileges, the user Jane_admin is added to the Domain Admins security group. This confirms both user creation and group-based privilege assignment within Active Directory.
-
 <br>
-<br>
-<img src="./images/step-6.png" height="50%" width="50%" alt="Disk Sanitization Steps"/>
+<img src="./images/organizational-unit1.jpg" height="60%" width="60%" alt="Disk Sanitization Steps"/>
 <br>
 
-The Jane_admin account is used as the administrative credential for subsequent domain operations.
-
-To prepare the client machine for domain membership, Client-1 is configured to use the Domain Controller’s private IP address as its DNS server. This change is applied at the virtual network level to ensure proper name resolution during the domain join process.
-
-After updating the DNS configuration, Client-1 is restarted from the Azure portal to apply the changes. Successful configuration is verified by confirming that Client-1 is resolving DNS requests through DC-1, as shown in the validation output below.
-
-<img src="./images/step-7.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
 <br>
-<img src="./images/step-8.jpg" height="80%" width="80%" alt="Disk Sanitization Steps"/>
-<br>
+<img src="./images/ou-2.jpg" height="60%" width="60%" alt="Disk Sanitization Steps"/>
+<br
 
-Client-1 is joined to the mydomain.com domain to complete the Active Directory integration.
+4.  Whin these OUs, a new user account is created to represent an administrative user. The account Jane Doe is provisioned with the username Jane_admin and placed appropriately within the directory structure.
 
-The system is configured to change its domain membership and authenticated using valid domain credentials (mydomain.com\labuser). Once the domain join process is complete, the client machine is restarted to finalize the configuration.
-
-After the restart, Client-1 is successfully enrolled in the domain and is managed under mydomain.com, confirming proper communication with the Domain Controller and Active Directory services.
+- To grant elevated privileges, the user Jane_admin is added to the Domain Admins security group. This confirms both user creation and group-based privilege assignment within Active Directory.
 
 <br>
-<img src="./images/step-9.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
-
-With Client-1 successfully joined to the domain, Remote Desktop access is configured to support non-administrative domain users.
-
-An administrator logs into Client-1 and updates the system’s Remote Desktop settings to allow access for Domain Users. This configuration enables standard domain accounts to establish remote sessions without requiring local administrative privileges.
-
-Once applied, non-administrative users are able to successfully log into Client-1 via Remote Desktop, confirming that access controls are properly configured.
-
-<br>
-<img src="./images/step-10.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
+<img src="./images/jane_doe-security.jpg" height="40%" width="40%" alt="Disk Sanitization Steps"/>
 <br>
 
-To validate Remote Desktop access for standard domain users, a PowerShell script is used to generate a large set of user accounts within the domain.
+- The Jane_admin account is used as the administrative credential for subsequent domain operations.
 
-After the users are created, a non-administrative account is selected and used to initiate a Remote Desktop session to Client-1. Successful authentication and login confirm that domain users can access the client machine as intended.
+<h2>Step 7: client-1 is joined to mydomain.com</h2>
 
-This final step verifies both user provisioning at scale and proper Remote Desktop access configuration for non-privileged accounts.
+1. client-1 is joined to the mydomain.com domain to complete the Active Directory integration.
 
-<br>
-<img src="./images/step-11.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
-
-<br>
-<img src="./images/step-12.png" height="60%" width="60%" alt="Disk Sanitization Steps"/>
-
-<br>
-<img src="./images/step-13.png" height="60%" width="60%" alt="Disk Sanitization Steps"/>
+- <b>While logged into client-1</b>
+  - Select Windows <b>System</b>
+  - Select <b>Advanced System Settings</b>
+  - Select <b>Computer Name</b>
+  - Set Domain name to <b>mydomain.com</b>
+  - When finished, computer will automaticall restart.
 
 <br>
-The PowerShell provisioning script successfully generated a standard domain user with the username bab.hubo.
+<img src="./images/client-1_domain.jpg" height="50%" width="50%" alt="Disk Sanitization Steps"/>
+<br>
 
-Using this account, a Remote Desktop session was established to Client-1 without administrative privileges. Successful login confirms that non-administrative domain users can authenticate and access the client machine as intended.
+<h2>Promote Server to Domain Controller</h2>
+
+1. After the restart, Client-1 is successfully enrolled in the domain and is managed under mydomain.com, confirming proper communication with the Domain Controller and Active Directory services.
+
+<br>
+<img src="./images/verification.jpg" height="50%" width="50%" alt="Disk Sanitization Steps"/>
+<br>
+
+- With Client-1 successfully joined to the domain, Remote Desktop access is configured to support non-administrative domain users.
+
+<h2>Step 8: Validate Remote Desktop Access</h2>
+
+1.To validate Remote Desktop access for standard domain users, a user was created using the username "Tom Smith" and placed in the \_EMPLOYEES Organizational Group.
+
+<img src="./images/tom_smith1.jpg" height="60%" width="60%" alt="Disk Sanitization Steps"/>
+
+2. After the user is created, "Tom Smith" is selected and used to initiate a Remote Desktop session to client-1. Successful authentication and login confirm that domain users can access the client machine as intended.
+
+3. This final step verifies both user provisioning and proper Remote Desktop access configuration for non-privileged accounts.

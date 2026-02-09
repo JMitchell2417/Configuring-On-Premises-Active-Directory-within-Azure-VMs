@@ -79,9 +79,7 @@ One virtual machine is configured as a Domain Controller, while the second serve
 
 - (If request fails: check that both VMs are in the same network or if its due to ICMP traffic being blocked by the Windows firewall on the Domain Controller.)
 
-<br>
 <img src="./images/1.5-clinet1ping.jpg" height="80%" width="80%" alt="ping"/>
-<br>
 
 - Still in client-1, run ipconfig /all
 
@@ -89,10 +87,6 @@ One virtual machine is configured as a Domain Controller, while the second serve
 
 <br>
 <img src="./images/a.5-client1-ipconfig.jpg" height="80%" width="80%" alt=""/>
-<br>
-
-<br>
-<img src="./images/step-3.png" height="60%" width="60%" alt="Disk Sanitization Steps"/>
 <br>
 
 <h2>Step 5: Promote Server to Domain Controller</h2>
@@ -123,10 +117,6 @@ One virtual machine is configured as a Domain Controller, while the second serve
 - After promotion, the system is restarted to apply the configuration changes.
 
 - Once the restart is complete, dC-1 is accessed using the domain account mydomain.com\labuser.
-
-<br>
-<img src="./images/step-4.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
-<br>
 
 <h2>Step 6: Create Organizational Units and Structure</h2>
 

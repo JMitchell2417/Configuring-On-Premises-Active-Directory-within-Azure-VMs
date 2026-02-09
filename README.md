@@ -53,13 +53,13 @@ One virtual machine is configured as a Domain Controller, while the second serve
 
 <h2>Step 2: Assign Domain Controller a static private IP address</h2>
 
-- The Domain Controller (DC-1) is assigned a static private IP address to ensure stable network communication with domain-joined clients.
+- The Domain Controller (dc-1) is assigned a static private IP address to ensure stable network communication with domain-joined clients.
 
 <br>
 <img src="./images/1.3-DC1-staticIP.jpg" height="80%" width="80%" alt="Disk Sanitization Steps"/>
 <br>
 
-<h2>Step 3: Set client-1’s DNS settings to DC-1’s Private IP address</h2>
+<h2>Step 3: Set client-1’s DNS settings to dc-1’s Private IP address</h2>
 
 - client-1 is configured to use dc-1’s private IP address as its DNS server because Active Directory depends on DNS for domain discovery, authentication, and service location.
 
@@ -75,7 +75,7 @@ One virtual machine is configured as a Domain Controller, while the second serve
 
 <h2>Step 4: Verify Connectivity</h2>
 
-- To verify connectivity, the client machine (client-1) attempts to ping DC-1.
+- To verify connectivity, the client machine (client-1) attempts to ping dc-1.
 
 - (If request fails: check that both VMs are in the same network or if its due to ICMP traffic being blocked by the Windows firewall on the Domain Controller.)
 
@@ -83,7 +83,7 @@ One virtual machine is configured as a Domain Controller, while the second serve
 
 - Still in client-1, run ipconfig /all
 
-  -The output for the DNS settings should show dC-1’s private IP Address
+  -The output for the DNS settings should show dc-1’s private IP Address
 
 <br>
 <img src="./images/a.5-client1-ipconfig.jpg" height="80%" width="80%" alt=""/>
@@ -116,7 +116,7 @@ One virtual machine is configured as a Domain Controller, while the second serve
 
 - After promotion, the system is restarted to apply the configuration changes.
 
-- Once the restart is complete, dC-1 is accessed using the domain account mydomain.com\labuser.
+- Once the restart is complete, dc-1 is accessed using the domain account mydomain.com\labuser.
 
 <h2>Step 6: Create Organizational Units and Structure</h2>
 

@@ -2,182 +2,123 @@
 <img src="./images/active-directory-logo.png" alt="Microsoft Active Directory Logo"/>
 </p>
 
-<h1>On-premises Active Directory Deployed in the Cloud (Azure)</h1>
+---
 
-This tutorial outlines the implementation of on-premises Active Directory within Azure Virtual Machines.<br />
+# Microsoft Azure Active Directory Lab (Cloud Edition)
 
-<h2>Environments and Technologies Used</h2>
+---
 
-- Microsoft Azure (Virtual Machines/Compute)
-- Remote Desktop (RDP)
-- Active Directory Domain Services
-- PowerShell
-- Azure Virtual Network
-- DNS
+## Overview
 
-<h2>Operating Systems Used </h2>
+This lab demonstrates how to deploy an **Active Directory environment in Azure** using two virtual machines connected within a **Virtual Network**.  
+It is designed for **hands-on demonstration**, showing how a Windows Server domain, client join, and Group Policies operate in a **cloud-based environment**.
 
-- Windows Server 2025 Datacenter
-- Windows 11 Pro
+---
 
-<h2>Deployment and Configuration Steps</h2>
+## Key Components
 
-- This lab provisions two virtual machines within the same Azure virtual network to simulate a basic on-premises Active Directory environment.
+| Component                        | Role                 | Description                                                    |
+| -------------------------------- | -------------------- | -------------------------------------------------------------- |
+| **DC01**                         | Windows Server 2025  | Hosts AD DS, DNS, and optional DHCP                            |
+| **CLIENT01**                     | Windows 11 Pro       | Domain-joined client used for GPO testing                      |
+| **Virtual Network (VNet)**       | Cloud Network        | Private IP space (192.168.100.0/24) for internal communication |
+| **Network Security Group (NSG)** | Firewall             | Allows inbound RDP only from your public IP                    |
+| **Resource Group**               | Management Container | Contains and organizes all Azure assets                        |
+| **Access**                       | Connectivity         | Direct RDP (no Bastion) to minimize costs                      |
 
-- Create a virtual network and subnet for both Virtual Machines to join (name: Active-Directory-Vnet)
+---
 
-<br>
-<img src="./images/fig1.2-Virtual-Network.jpg" height="60%" width="60%" alt="Virtual Network"/>
-<br>
+## Learning Objectives
 
-<h2>Step 1: Create Virtual Machines</h2>
+- Deploy and configure **Active Directory Domain Services (AD DS)** in Azure
+- Configure **NSG rules** to restrict RDP access securely
+- Apply **Group Policy Objects (GPOs)** for centralized management
+- Test **domain join and user permissions** between cloud VMs
+- Practice **resource cleanup**
 
-One virtual machine is configured as a Domain Controller, while the second serves as a client workstation.
+---
 
-- <b>Domain Controller (DC)</b>
-  - OS: Windows (Windows Server 2025 Datacenter Azure Edition)
-  - VM Size: Minimum 2 vCPUs
-  - Name: dc-01
-  - Virtual Network: Previously created (Active-Directory-VNet)
-  - Private IP: Static (important)
+## Core Lab Setup
 
-- <b>Client Machine</b>
-  - OS: Windows (Windows 11 Pro)
-  - VM Size: Minimum 2 vCPUs
-  - Name: client-01
-  - Virtual Network: Previously created (Active-Directory-VNet)
+| Component                        | Purpose                               | Notes                                        |
+| -------------------------------- | ------------------------------------- | -------------------------------------------- |
+| **Resource Group**               | Logical container for Azure resources | Simplifies cleanup and management            |
+| **Virtual Network (VNet)**       | Internal communication network        | 192.168.100.0/24 subnet                      |
+| **Network Security Group (NSG)** | Firewall control                      | Restricts RDP to your public IP on port 3389 |
+| **DC01 (Server)**                | Domain Controller                     | Runs AD DS, DNS, DHCP (optional)             |
+| **CLIENT01 (Client)**            | Domain-joined workstation             | Used for GPO validation and login tests      |
 
-<br>
-<img src="./images/1.1-VMs.jpg" height="80%" width="80%" alt="Virtual Network"/>
-<br>
+---
 
-<h2>Step 2: Assign Domain Controller a static private IP address</h2>
+## Key Group Policies Implemented
 
-- The Domain Controller (dc-1) is assigned a static private IP address to ensure stable network communication with domain-joined clients.
+| GPO                          | Purpose                            | Result                                       |
+| ---------------------------- | ---------------------------------- | -------------------------------------------- |
+| **Disable Control Panel**    | Restrict access to system settings | “Restricted by your administrator” displayed |
+| **Prevent Wallpaper Change** | Enforce corporate branding         | Company wallpaper applied across clients     |
+| **Disable Task Manager**     | Block task termination             | Task Manager disabled for standard users     |
+| **Allow RDP for HR Group**   | Grant limited RDP rights           | HR users can RDP into CLIENT01               |
 
-<br>
-<img src="./images/1.3-DC1-staticIP.jpg" height="80%" width="80%" alt="Disk Sanitization Steps"/>
-<br>
+---
 
-<h2>Step 3: Set client-1’s DNS settings to dc-1’s Private IP address</h2>
+## Technical Highlights
 
-- client-1 is configured to use dc-1’s private IP address as its DNS server because Active Directory depends on DNS for domain discovery, authentication, and service location.
+- **Secure RDP access** through NSG filtering (source IP restriction)
+- **Custom DNS configuration** (192.168.100.10) for name resolution
+- **Azure DHCP** automatically assigns internal IPs (no manual scope setup)
+- **Group Policy enforcement** through Azure-hosted DC
+- **Shared UNC path:** `\\DC01\Company\logo.jpg` used for wallpaper policy
 
-- This ensures the client can reliably locate the Domain Controller and interact with domain services within the virtual network.
+---
 
-<br>
-<img src="./images/1.4-dc1-privateIP.jpg" height="80%" width="80%" alt="dc-1 private IP"/>
-<br>
+## Validation Tasks
 
-<br>
-<img src="./images/1.4-client1-dnsSettings.jpg" height="80%" width="80%" alt="client-1 DNS settings"/>
-<br>
+☑ AD DS installed and DC01 promoted successfully  
+☑ CLIENT01 joined to `lab.local` domain  
+☑ GPOs applied (`gpresult /h C:\GPOReport.html`)  
+☑ Wallpaper and system restrictions verified  
+☑ HR group RDP access validated  
+☑ Azure resources deleted after testing
 
-<h2>Step 4: Verify Connectivity</h2>
+---
 
-- To verify connectivity, the client machine (client-1) attempts to ping dc-1.
+## Screenshots
 
-- (If request fails: check that both VMs are in the same network or if its due to ICMP traffic being blocked by the Windows firewall on the Domain Controller.)
+| Image                                                                                                                              | Description                                                                                                                                                                                      |
+| ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| <img width="210" height="66" alt="image" src="https://github.com/user-attachments/assets/61272045-47aa-41e5-86f3-e6dcf7141aad" />  | Resource Group created                                                                                                                                                                           |
+| <img width="365" height="271" alt="image" src="https://github.com/user-attachments/assets/28620f35-0bb2-417e-b0e8-f80a76f72ebc" /> | **Virtual Network `vnet-adlab`** : for secure internal communication between resources created                                                                                                   |
+| <img width="249" height="215" alt="image" src="https://github.com/user-attachments/assets/07ab7b57-8284-442c-9151-e75e373702ec" /> | **NSG rule allowing RDP from admin IP** : To securely manage the VM while blocking unauthorized access.                                                                                          |
+| <img width="249" height="215" alt="image" src="./images/dc-static_ip.jpg" />                                                       | **Configure DC01 static IP** : Ensures the Domain Controller always has a consistent IP address so clients can reliably locate DNS and authentication services without disruption.               |
+| <img width="450" height="143" alt="image" src="https://github.com/user-attachments/assets/c5a70aa3-30a8-4282-80b5-102585f10848" /> | Windows Server 2022 (DC01) promoted to domain controller                                                                                                                                         |
+| <img width="426" height="492" alt="image" src="https://github.com/user-attachments/assets/5ae35e43-c5b2-43b8-9a9a-01eb5cdc7cfb" /> | Windows 11 client joined to domain                                                                                                                                                               |
+| <img width="500" height="auto" alt="image" src="./images/dns.jpg" />                                                               | Confirmed the DNS server of CLIENT01 matches the IP of DC01                                                                                                                                      |
+| <img width="446" height="100" alt="image" src="https://github.com/user-attachments/assets/a10693b9-bd5e-4c82-887f-5ae0d1efc11a" /> | **Control Panel GPO enforced** : To prevent users from making unauthorized system changes, enforce consistent configurations, and reduce support issues by limiting access to critical settings. |
+| <img width="312" height="117" alt="image" src="https://github.com/user-attachments/assets/db93cd2c-c1d0-4b25-8896-e35014960a87" /> | **Task Manager GPO** : To prevent users from terminating critical processes or bypassing restrictions, ensuring system stability and maintaining enforced security policies. enforced            |
+| <img width="728" height="377" alt="image" src="./images/wallpaper.jpg" />                                                          | RDP allowed for HR user and Wallpaper GPO applied                                                                                                                                                |
 
-<img src="./images/1.5-clinet1ping.jpg" height="80%" width="80%" alt="ping"/>
+---
 
-- Still in client-1, run ipconfig /all
+## Resource Allocation
 
-  -The output for the DNS settings should show dc-1’s private IP Address
+| VM           | OS                  | vCPU | RAM  | Disk  | Role               |
+| ------------ | ------------------- | ---- | ---- | ----- | ------------------ |
+| **DC01**     | Windows Server 2025 | 2    | 4 GB | 60 GB | Domain Controller  |
+| **CLIENT01** | Windows 11 Pro      | 2    | 4 GB | 60 GB | Client Workstation |
 
-<br>
-<img src="./images/a.5-client1-ipconfig.jpg" height="80%" width="80%" alt=""/>
-<br>
+---
 
-<h2>Step 5: Promote Server to Domain Controller</h2>
+## Results
 
-- <b>Install Active Directory Domain Services on dc-1</b>
-  - Open <b>Server Manager</b>
-  - Select <b>Add Roles and Features</b>
-  - Install <b>Active Directory Domain Services</b>
+☑ Domain deployed successfully in Azure  
+☑ CLIENT01 verified domain membership and GPO application  
+☑ NSG confirmed secure RDP restriction  
+☑ Cost estimation validated in Azure portal  
+☑ All assets cleaned up post-lab to avoid charges
 
-<br>
-<img src="./images/2.0-dc-1.jpg" height="60%" width="60%" alt="Disk Sanitization Steps"/>
-<br>
+---
 
-- <b>Promote dc-1 to a Domain Controller</b>
-  - Select <b>Promote this Server to a Domain Controller</b>
-  - Choose <b>Add New Forest</b>
-  - Set Domain name to <b>mydomain.com</b>
-  - Finish Installation
+## Summary
 
-<br>
-<img src="./images/2.1-dc1-promotion.jpg" height="60%" width="60%" alt="Disk Sanitization Steps"/>
-<br>
-
-<br>
-<img src="./images/2.1-dc1-forest.jpg" height="60%" width="60%" alt="Disk Sanitization Steps"/>
-<br>
-
-- After promotion, the system is restarted to apply the configuration changes.
-
-- Once the restart is complete, dc-1 is accessed using the domain account mydomain.com\labuser.
-
-<h2>Step 6: Create Organizational Units and Structure</h2>
-
-1. Successful configuration is confirmed by launching <b>Active Directory Users and Computers</b>, indicating that the domain services are operational.
-
-2. Organizational Units (OUs) are created to establish basic directory structure and administrative separation within the domain.
-
-3. <b>Two OUs are defined at the domain level</b>
-
-- \_EMPLOYEES
-- \_ADMINS
-
-<br>
-<img src="./images/organizational-unit1.jpg" height="60%" width="60%" alt="Disk Sanitization Steps"/>
-<br>
-
-<br>
-<img src="./images/ou-2.jpg" height="60%" width="60%" alt="Disk Sanitization Steps"/>
-<br
-
-4.  Whin these OUs, a new user account is created to represent an administrative user. The account Jane Doe is provisioned with the username Jane_admin and placed appropriately within the directory structure.
-
-- To grant elevated privileges, the user Jane_admin is added to the Domain Admins security group. This confirms both user creation and group-based privilege assignment within Active Directory.
-
-<br>
-<img src="./images/jane_doe-security.jpg" height="40%" width="40%" alt="Disk Sanitization Steps"/>
-<br>
-
-- The Jane_admin account is used as the administrative credential for subsequent domain operations.
-
-<h2>Step 7: client-1 is joined to mydomain.com</h2>
-
-1. client-1 is joined to the mydomain.com domain to complete the Active Directory integration.
-
-- <b>While logged into client-1</b>
-  - Select Windows <b>System</b>
-  - Select <b>Advanced System Settings</b>
-  - Select <b>Computer Name</b>
-  - Set Domain name to <b>mydomain.com</b>
-  - When finished, computer will automaticall restart.
-
-<br>
-<img src="./images/client-1_domain.jpg" height="50%" width="50%" alt="Disk Sanitization Steps"/>
-<br>
-
-<h2>Promote Server to Domain Controller</h2>
-
-1. After the restart, Client-1 is successfully enrolled in the domain and is managed under mydomain.com, confirming proper communication with the Domain Controller and Active Directory services.
-
-<br>
-<img src="./images/verification.jpg" height="50%" width="50%" alt="Disk Sanitization Steps"/>
-<br>
-
-- With Client-1 successfully joined to the domain, Remote Desktop access is configured to support non-administrative domain users.
-
-<h2>Step 8: Validate Remote Desktop Access</h2>
-
-1.To validate Remote Desktop access for standard domain users, a user was created using the username "Tom Smith" and placed in the \_EMPLOYEES Organizational Group.
-
-<img src="./images/tom_smith1.jpg" height="60%" width="60%" alt="Disk Sanitization Steps"/>
-
-2. After the user is created, "Tom Smith" is selected and used to initiate a Remote Desktop session to client-1. Successful authentication and login confirm that domain users can access the client machine as intended.
-
-3. This final step verifies both user provisioning and proper Remote Desktop access configuration for non-privileged accounts.
+A **Microsoft Azure-hosted Active Directory lab** that mirrors on-premises functionality in the cloud.  
+Demonstrates **domain services, GPOs, access control, and cost efficiency**—ideal for **IT training and cloud-based system administration practice**.

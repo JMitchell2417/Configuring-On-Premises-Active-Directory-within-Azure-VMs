@@ -120,5 +120,10 @@ It is designed for **hands-on demonstration**, showing how a Windows Server doma
 
 ## Summary
 
-A **Microsoft Azure-hosted Active Directory lab** that mirrors on-premises functionality in the cloud.  
-Demonstrates **domain services, GPOs, access control, and cost efficiency**—ideal for **IT training and cloud-based system administration practice**.
+## Summary
+
+A **Microsoft Azure-hosted Active Directory lab** simulating an on-premises domain environment in the cloud.
+
+Configured core components including **Domain Controller, Users, Groups, OUs, GPOs, and secure remote access (RDP/VPN)**.
+
+Demonstrates hands-on experience with **identity management, access control, network security (NSGs), and system administration** in a scalable, cost-efficient environment.
